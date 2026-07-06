@@ -139,13 +139,19 @@ tysan_cc_binary, _tysan_cc_binary_internal = with_cfg(cc_binary).set(
     True,
 ).build()
 
-tsan_cc_binary, _tsan_cc_binary_internal = with_cfg(cc_binary).set(
+# buildifier: disable=unused-variable
+_tsan_cc_binary, _tsan_cc_binary_internal = with_cfg(cc_binary).set(
     Label("@llvm//config:tsan"),
     True,
 ).set(
     Label("@llvm//config:host_tsan"),
     True,
 ).build()
+
+tsan_cc_binary = _with_macos_sanitizer_runtime(
+    _tsan_cc_binary,
+    "@llvm//runtimes/compiler-rt:clang_rt.tsan.shared",
+)
 
 # buildifier: disable=unused-variable
 _asan_cc_binary, _asan_cc_binary_internal = with_cfg(cc_binary).set(

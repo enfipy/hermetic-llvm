@@ -84,6 +84,12 @@ config_setting(
     flag_values = {"//config:lsan_target_config": "true"},
 )
 
+config_setting(
+    name = "_tsan_dynamic_runtime_macos",
+    constraint_values = ["@platforms//os:macos"],
+    flag_values = {"//config:tsan_target_config": "true"},
+)
+
 # On Darwin the sanitizer runtimes are dylibs. Adding an enabled sanitizer's
 # dylib to the dynamic runtime libs makes the toolchain place it in the runfiles
 # of any dynamically-linked target and emit the @loader_path rpath (via the
@@ -102,6 +108,9 @@ filegroup(
         "//conditions:default": [],
     }) + select({
         ":_lsan_dynamic_runtime_macos": ["//runtimes/compiler-rt:clang_rt.lsan.shared"],
+        "//conditions:default": [],
+    }) + select({
+        ":_tsan_dynamic_runtime_macos": ["//runtimes/compiler-rt:clang_rt.tsan.shared"],
         "//conditions:default": [],
     }),
     visibility = ["//visibility:public"],
@@ -332,6 +341,12 @@ copy_to_resource_directory(
         "//config:lsan_enabled": {
             # LSan is a dylib on Darwin; no static standalone runtime.
             "//runtimes/compiler-rt:clang_rt.lsan.shared": "libclang_rt.lsan_osx_dynamic",
+        },
+        "//conditions:default": {},
+    }) | select({
+        "//config:tsan_enabled": {
+            # TSan is a dylib on Darwin (x86_64/arm64); no static runtime.
+            "//runtimes/compiler-rt:clang_rt.tsan.shared": "libclang_rt.tsan_osx_dynamic",
         },
         "//conditions:default": {},
     }),
